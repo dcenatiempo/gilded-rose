@@ -4,52 +4,51 @@ function Item(name, sell_in, quality) {
   this.quality = quality;
 }
 
-function update_quality(items = []) {
-  return items.map(updateItemQuality)
+const  itemUpdateMap = {
+  "Sulfuras, Hand of Ragnaros": noUpdate,
+  "Conjured Mana Cake": conjureUpdate,
+  "Aged Brie": brieUpdate,
+  "Backstage passes to a TAFKAL80ETC concert": backstageUpdate,
 }
 
-function updateItemQuality(item) {
-  if (item.name != 'Aged Brie' && item.name != 'Backstage passes to a TAFKAL80ETC concert') {
-    if (item.quality > 0) {
-      if (item.name != 'Sulfuras, Hand of Ragnaros') {
-        item.quality = item.quality - 1
-      }
-    }
-  } else {
-    if (item.quality < 50) {
-      item.quality = item.quality + 1
-      if (item.name == 'Backstage passes to a TAFKAL80ETC concert') {
-        if (item.sell_in < 11) {
-          if (item.quality < 50) {
-            item.quality = item.quality + 1
-          }
-        }
-        if (item.sell_in < 6) {
-          if (item.quality < 50) {
-            item.quality = item.quality + 1
-          }
-        }
-      }
-    }
-  }
-  if (item.name != 'Sulfuras, Hand of Ragnaros') {
-    item.sell_in = item.sell_in - 1;
-  }
-  if (item.sell_in < 0) {
-    if (item.name != 'Aged Brie') {
-      if (item.name != 'Backstage passes to a TAFKAL80ETC concert') {
-        if (item.quality > 0) {
-          if (item.name != 'Sulfuras, Hand of Ragnaros') {
-            item.quality = item.quality - 1
-          }
-        }
-      } else {
-        item.quality = item.quality - item.quality
-      }
-    } else {
-      if (item.quality < 50) {
-        item.quality = item.quality + 1
-      }
-    }
-  }
+function update_quality(items = []) {
+  return items.map(item => {
+    const itemUpdate = itemUpdateMap?.[item.name] || normalUpdate
+    itemUpdate(item)
+  });
+}
+
+function noUpdate(item) {
+  return;
+}
+
+function normalUpdate(item) {
+  item.sell_in -= 1;
+  if (item.quality === 0) return;
+  item.quality -= 1;
+  if (item.sell_in < 0) qualityTick = item.quality -= 1;
+}
+
+function conjureUpdate(item) {
+  item.sell_in -= 1;
+  item.quality -= 2;
+  if (item.sell_in < 0) qualityTick = item.quality -= 2;
+  if (item.quality < 0) item.quality = 0;
+}
+
+function brieUpdate(item) {
+  item.sell_in -= 1;
+  if (item.quality === 50) return;
+  item.quality += 1;
+  if (item.quality === 50) return;
+  if (item.sell_in < 0) qualityTick = item.quality += 1;
+}
+
+function backstageUpdate(item) {
+  item.sell_in -= 1;
+  item.quality += 1;
+  if (item.sell_in <= 10) item.quality += 1;
+  if (item.sell_in <= 5) item.quality += 1;
+  if (item.sell_in <= 0) item.quality = 0;
+  if (item.quality > 50) item.quality = 50;
 }
